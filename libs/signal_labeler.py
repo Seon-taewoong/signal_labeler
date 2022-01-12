@@ -153,6 +153,20 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
             self.event_spans.pop(delete_idx)
             self.event_texts.pop(delete_idx)
             self.events_array.pop(delete_idx)
+            # list view 데이터 다시 채우기
+            events_num_after = len(self.events_array)
+            self.EventProperty.clear()
+            if events_num_after > 0:
+                for tmp_dict_event_idx, tmp_dict_event in enumerate(self.events_array):
+                    tmp_event_number = tmp_dict_event_idx
+                    tmp_event_name = tmp_dict_event['event_name']
+                    duration = tmp_dict_event['duration']
+                    event_str = 'event number: {}, event name: {}, duration: {} sec'.format(tmp_event_number,
+                                                                                            tmp_event_name, duration)
+                    self.EventProperty.addItem(event_str)
+                    self.events_array[tmp_dict_event_idx]['event_number'] = tmp_dict_event_idx
+            # figure str 다시 그리기
+            ###
             # figure 다시 그리기
             self.fig.canvas.draw()
         else:
