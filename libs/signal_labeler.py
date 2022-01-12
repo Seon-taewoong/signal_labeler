@@ -25,6 +25,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         # 파라메터 정의
         self.data = np.array(data)
         self.label = np.zeros(self.data.shape)
+        self.events_array = []
         self.fs = fs
         self.window_sec = window_sec
         self.wheel_sec = wheel_sec
@@ -48,18 +49,14 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
 
     def init_graph(self):
         self.fig = plt.Figure(figsize=(8, 5), dpi=100)
-        self.ax_data = self.fig.add_subplot(211)
-        self.ax_label = self.fig.add_subplot(212, sharex=self.ax_data)
+        self.ax_data = self.fig.add_subplot(111)
         # set data
         self.canvas_data, = self.ax_data.plot(self.data)
-        self.canvas_label, = self.ax_label.plot(self.label)
         # set title
         self.ax_data.set_title('Signal')
-        self.ax_label.set_title('Label')
         # set ticks
         # set init x axis limitation
         self.ax_data.set_xlim([self.xlim_start, self.xlim_end])
-        self.ax_label.set_ylim([-0.1, 3])
         # make widget
         fig_agg = FigureCanvas(self.fig)
         self.LayoutGraph.addWidget(fig_agg)
@@ -73,7 +70,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         self.mouse_release_evnet = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
 
     def line_select_callback(self, eclick, erelease):
-        self.x1, y1 = eclick.xdata, eclick.ydata
+        self.x1, self.y1 = eclick.xdata, eclick.ydata
         self.x2, y2 = erelease.xdata, erelease.ydata
         # rect = plt.Rectangle((min(self.x1, self.x2), min(y1, y2)), np.abs(self.x1 - self.x2), np.abs(y1 - y2))
         print(self.x1, self.x2)
@@ -88,8 +85,15 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
 
         elif str(event.button) == 'MouseButton.RIGHT':
             self.rect_sel.set_visible(False)
-            self.label[int(self.x1):int(self.x2)] = 1
-            self.canvas_label.set_ydata(self.label)
+            self.ax_data.axvspan(self.x1, self.x2, color='#ccc')
+            tmp_event_name = 'event'
+            tmp_duration = np.round((self.x2 - self.x1) / self.fs, 2)
+            tmp_event = {'event_name': tmp_event_name,
+                         'start_idx': self.x1,
+                         'end_idx': self.x2,
+                         'duration': tmp_duration}
+            self.events_array.append(tmp_event)
+            self.ax_data.text(self.x1, self.y1, 'event name: {} \n'.format(tmp_event_name) + ' duration: {}'.format(tmp_duration), fontsize=10)
             self.fig.canvas.draw()
         else:
             pass
