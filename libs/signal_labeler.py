@@ -26,6 +26,8 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         self.data = np.array(data)
         self.label = np.zeros(self.data.shape)
         self.events_array = []
+        self.event_spans = []
+        self.event_texts = []
         self.fs = fs
         self.window_sec = window_sec
         self.wheel_sec = wheel_sec
@@ -33,9 +35,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         self.actionLoadFile.triggered.connect(self.btn_clicked_load_file)
         self.actionExit.triggered.connect(self.btn_clicked_exit)
         self.pushButtonDeleteLoadFile.clicked.connect(self.btn_clicked_delete_load_file)
-        self.pushButtonViewImageLoadFile.clicked.connect(self.btn_clicked_view_image_load_file)
-        self.listWidgetLoadFile.clicked.connect(self.view_property_load_file)
-
+        self.EventProperty.doubleClicked.connect(self.EventPropertyDoubleClick)
         # 메세지 창
         self.emsg_load_file = QErrorMessage(self)
         self.resizing_not_chosen_file = QErrorMessage(self)
@@ -85,16 +85,23 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
 
         elif str(event.button) == 'MouseButton.RIGHT':
             self.rect_sel.set_visible(False)
-            self.ax_data.axvspan(self.x1, self.x2, color='#ccc')
+            tmp_span = self.ax_data.axvspan(self.x1, self.x2, color='#ccc')
             tmp_event_name = 'event'
             tmp_duration = np.round((self.x2 - self.x1) / self.fs, 2)
-            tmp_event = {'event_name': tmp_event_name,
+            tmp_event_number = len(self.events_array)
+            tmp_event = {'event_number': tmp_event_number,
+                         'event_name': tmp_event_name,
                          'start_idx': self.x1,
                          'end_idx': self.x2,
-                         'duration': tmp_duration}
+                         'duration': tmp_duration,
+                         'span_y': self.y1}
+            self.view_property_load_file(tmp_event)
             self.events_array.append(tmp_event)
-            self.ax_data.text(self.x1, self.y1, 'event name: {} \n'.format(tmp_event_name) + ' duration: {}'.format(tmp_duration), fontsize=10)
+            tmp_text = self.ax_data.text(self.x1, self.y1, 'event number: {} \n event name: {} \n'.format(tmp_event_number, tmp_event_name) + ' duration: {} sec'.format(tmp_duration), fontsize=10)
             self.fig.canvas.draw()
+            # append span and text plot
+            self.event_spans.append(tmp_span)
+            self.event_texts.append(tmp_text)
         else:
             pass
 
@@ -134,57 +141,47 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
             self.listWidgetLoadFile.addItem(self.load_file_path)
 
     def btn_clicked_delete_load_file(self):
-        # 특징 데이터를 특징 리스트뷰에서 삭제
-        self.delete_property_load_file()
-        # 로드 된 파일의 경로를 삭제
-        delete_idx = self.listWidgetLoadFile.currentRow()
-        self.listWidgetLoadFile.takeItem(delete_idx)
-        # 현재 QgraphicView의 이미지 삭제
-        try:
-            self.scene.clear()
-        except:
-            pass
-
-    def delete_property_load_file(self):
-        # 이전 데이터를 리스트뷰에서 지우기
-        self.listWidgetLoadFileProperty.takeItem(0)
-        self.listWidgetLoadFileProperty.takeItem(0)
-
-    def btn_clicked_view_image_load_file(self):
-        try:
-            current_path = self.listWidgetLoadFile.currentItem().text()
-        except:
-            return -1
-
-        if current_path is None:
-            return -1
+        # 그래프 이벤트 지우기
+        events_num = len(self.events_array)
+        if events_num > 0:
+            delete_idx = self.EventProperty.currentRow()
+            self.EventProperty.takeItem(delete_idx)
+            ## remove figure
+            self.event_spans[delete_idx].remove()
+            self.event_texts[delete_idx].remove()
+            # remove list
+            self.event_spans.pop(delete_idx)
+            self.event_texts.pop(delete_idx)
+            self.events_array.pop(delete_idx)
+            # figure 다시 그리기
+            self.fig.canvas.draw()
         else:
-            # 선택한 로드파일 시각화
-            self.scene = QGraphicsScene(self)
-            pixmap = QPixmap(current_path)
-            item = QGraphicsPixmapItem(pixmap)
-            self.scene.addItem(item)
-            # self.graphicsView.setScene(self.scene)
+            print('event not exist')
 
-    def view_property_load_file(self):
-        # 이전 데이터를 리스트뷰에서 지우기
-        self.delete_property_load_file()
+    def view_property_load_file(self, event_dict):
         # 새 특징를 리스트 뷰에 추가
-        path = self.listWidgetLoadFile.currentItem().text()
-        img_array = np.fromfile(path, np.uint8)
-        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-        img_shape = img.shape
-        img_raw_volume = os.path.getsize(path)
-
-        image_size = 'image size: {} x {}'.format(img_shape[0], img_shape[1])
-        image_volume = 'image raw volume: {} bytes'.format(img_raw_volume)
-
-        self.listWidgetLoadFileProperty.addItem(image_size)
-        self.listWidgetLoadFileProperty.addItem(image_volume)
+        tmp_event_number = event_dict['event_number']
+        tmp_event_name = event_dict['event_name']
+        duration = event_dict['duration']
+        event_str = 'event number: {}, event name: {}, duration: {} sec'.format(tmp_event_number, tmp_event_name, duration)
+        self.EventProperty.addItem(event_str)
 
     def view_property_result_file(self):
         pass
 
+    def EventPropertyDoubleClick(self):
+        # 그래프 이벤트 지우기
+        events_num = len(self.events_array)
+        if events_num > 0:
+            target_idx = self.EventProperty.currentRow()
+            target_event = self.events_array[target_idx]
+            x1 = target_event['start_idx']
+            window = int((self.window_sec * self.fs) / 2)
+            self.ax_data.set_xlim([x1 - window, x1 + window])
+            # figure 다시 그리기
+            self.fig.canvas.draw()
+        else:
+            print('event not exist')
 if __name__ == '__main__':
     data = np.random.randn(1000)
     app = QApplication(sys.argv)
