@@ -155,6 +155,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
             self.events_array.pop(delete_idx)
             # list view 데이터 다시 채우기
             events_num_after = len(self.events_array)
+            # 여기서 figure str clear 후 다시 그리기
             self.EventProperty.clear()
             if events_num_after > 0:
                 for tmp_dict_event_idx, tmp_dict_event in enumerate(self.events_array):
