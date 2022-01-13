@@ -32,10 +32,10 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         self.window_sec = window_sec
         self.wheel_sec = wheel_sec
         # 이벤트 연결
-        self.actionLoadFile.triggered.connect(self.btn_clicked_load_file)
-        self.actionExit.triggered.connect(self.btn_clicked_exit)
+        self.actionLoadFile.triggered.connect(self.menu_btn_clicked_load_file)
+        self.actionExit.triggered.connect(self.menu_btn_clicked_exit)
         self.pushButtonDeleteLoadFile.clicked.connect(self.btn_clicked_delete_load_file)
-        self.EventProperty.doubleClicked.connect(self.EventPropertyDoubleClick)
+        self.EventProperty.doubleClicked.connect(self.double_click_list_view)
         # 메세지 창
         self.emsg_load_file = QErrorMessage(self)
         self.resizing_not_chosen_file = QErrorMessage(self)
@@ -61,13 +61,13 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         fig_agg = FigureCanvas(self.fig)
         self.LayoutGraph.addWidget(fig_agg)
         # event connect
-        self.mouse_whell_evnet = self.fig.canvas.mpl_connect('scroll_event', self.on_wheel)
+        self.mouse_whell_evnet = self.fig.canvas.mpl_connect('scroll_event', self.on_wheel_graph)
         self.rect_sel = RectangleSelector(self.ax_data, self.line_select_callback,
                                           drawtype='box', useblit=False, button=[1],
                                           minspanx=5, minspany=5, spancoords='pixels',
                                           interactive=True)
-        self.mouse_click_event = self.fig.canvas.mpl_connect('button_press_event', self.on_click)
-        self.mouse_release_evnet = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
+        self.mouse_click_event = self.fig.canvas.mpl_connect('button_press_event', self.on_click_graph)
+        self.mouse_release_evnet = self.fig.canvas.mpl_connect('button_release_event', self.on_release_graph)
 
     def line_select_callback(self, eclick, erelease):
         self.x1, self.y1 = eclick.xdata, eclick.ydata
@@ -75,11 +75,11 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         # rect = plt.Rectangle((min(self.x1, self.x2), min(y1, y2)), np.abs(self.x1 - self.x2), np.abs(y1 - y2))
         print(self.x1, self.x2)
 
-    def on_click(self, event):
+    def on_click_graph(self, event):
         self.rect_sel.set_visible(True)
         print('click')
 
-    def on_release(self, event):
+    def on_release_graph(self, event):
         if str(event.button) == 'MouseButton.LEFT':
             print('L click')
 
@@ -95,7 +95,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
                          'end_idx': self.x2,
                          'duration': tmp_duration,
                          'span_y': self.y1}
-            self.view_property_load_file(tmp_event)
+            self.add_item_to_list_view(tmp_event)
             self.events_array.append(tmp_event)
             tmp_text = self.ax_data.text(self.x1, self.y1, 'event number: {} \n event name: {} \n'.format(tmp_event_number, tmp_event_name) + ' duration: {} sec'.format(tmp_duration), fontsize=10)
             self.fig.canvas.draw()
@@ -105,7 +105,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         else:
             pass
 
-    def on_wheel(self, event):
+    def on_wheel_graph(self, event):
         if event.button == 'up':
             if self.xlim_end >= len(self.data):
                 print('wheel up pass')
@@ -127,10 +127,10 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         else:
             pass
 
-    def btn_clicked_exit(self):
+    def menu_btn_clicked_exit(self):
         print('exit')
 
-    def btn_clicked_load_file(self):
+    def menu_btn_clicked_load_file(self):
         # 사진 파일 경로 읽어오기
         self.load_file_path, self.load_file_path_type = QFileDialog.getOpenFileName()
 
@@ -173,7 +173,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         else:
             print('event not exist')
 
-    def view_property_load_file(self, event_dict):
+    def add_item_to_list_view(self, event_dict):
         # 새 특징를 리스트 뷰에 추가
         tmp_event_number = event_dict['event_number']
         tmp_event_name = event_dict['event_name']
@@ -181,10 +181,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         event_str = 'event number: {}, event name: {}, duration: {} sec'.format(tmp_event_number, tmp_event_name, duration)
         self.EventProperty.addItem(event_str)
 
-    def view_property_result_file(self):
-        pass
-
-    def EventPropertyDoubleClick(self):
+    def double_click_list_view(self):
         # 그래프 이벤트 지우기
         events_num = len(self.events_array)
         if events_num > 0:
@@ -197,6 +194,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
             self.fig.canvas.draw()
         else:
             print('event not exist')
+
 if __name__ == '__main__':
     data = np.random.randn(1000)
     app = QApplication(sys.argv)
