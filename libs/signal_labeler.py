@@ -3,11 +3,7 @@ import os
 import numpy as np
 import tkinter as tk
 from tkinter import *
-from PIL import Image, ImageTk
 from PyQt5 import uic
-# from PyQt5 import QtGui
-# from PyQt5.QtCore import QCoreApplication
-import cv2
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, \
     QErrorMessage, QGraphicsPixmapItem, QGraphicsScene
 from PyQt5.QtGui import QPixmap
@@ -96,7 +92,12 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
                          'span_y': self.y1}
             self.add_item_to_list_view(tmp_event)
             self.events_array.append(tmp_event)
-            tmp_text = self.ax_data.text(self.x1, self.y1, 'event number: {} \n event name: {} \n'.format(tmp_event_number, tmp_event_name) + ' duration: {} sec'.format(tmp_duration), fontsize=10)
+            tmp_text = self.ax_data.text(self.x1, self.y1,
+                                         'event number: {} \n event name: {} \n'.format(tmp_event_number, tmp_event_name) + ' duration: {} sec'.format(tmp_duration),
+                                          family='sans-serif',
+                                          size=10,
+                                          horizontalalignment='center',
+                                          verticalalignment='center')
             self.fig.canvas.draw()
             # append span and text plot
             self.event_spans.append(tmp_span)
@@ -169,7 +170,13 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
                     # span 그리기
                     tmp_span = self.ax_data.axvspan(tmp_start_idx, tmp_end_idx, color='#ccc')
                     # text 그리기
-                    tmp_text = self.ax_data.text(tmp_start_idx, tmp_span_y, 'event number: {} \n event name: {} \n'.format(tmp_event_number, tmp_event_name) + ' duration: {} sec'.format(tmp_duration), fontsize=10)
+                    tmp_text = self.ax_data.text(tmp_start_idx, tmp_span_y,
+                                                 'event number: {} \n event name: {} \n'.format(tmp_event_number, tmp_event_name) + ' duration: {} sec'.format(tmp_duration),
+                                                 family='sans-serif',
+                                                 size=10,
+                                                 horizontalalignment='center',
+                                                 verticalalignment='center'
+                                                 )
                     # append span and text plot
                     self.event_spans.append(tmp_span)
                     self.event_texts.append(tmp_text)
