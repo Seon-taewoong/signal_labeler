@@ -34,7 +34,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         # 이벤트 연결
         self.actionLoadFile.triggered.connect(self.menu_btn_clicked_load_file)
         self.actionExit.triggered.connect(self.menu_btn_clicked_exit)
-        self.pushButtonDeleteLoadFile.clicked.connect(self.btn_clicked_delete_load_file)
+        self.pushButtonDeleteEvent.clicked.connect(self.btn_clicked_delete_event)
         self.EventProperty.doubleClicked.connect(self.double_click_list_view)
         # 메세지 창
         self.emsg_load_file = QErrorMessage(self)
@@ -63,7 +63,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         # event connect
         self.mouse_whell_evnet = self.fig.canvas.mpl_connect('scroll_event', self.on_wheel_graph)
         self.rect_sel = RectangleSelector(self.ax_data, self.line_select_callback,
-                                          drawtype='box', useblit=False, button=[1],
+                                          drawtype='box', useblit=True, button=[1],
                                           minspanx=5, minspany=5, spancoords='pixels',
                                           interactive=True)
         self.mouse_click_event = self.fig.canvas.mpl_connect('button_press_event', self.on_click_graph)
@@ -72,7 +72,6 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
     def line_select_callback(self, eclick, erelease):
         self.x1, self.y1 = eclick.xdata, eclick.ydata
         self.x2, y2 = erelease.xdata, erelease.ydata
-        # rect = plt.Rectangle((min(self.x1, self.x2), min(y1, y2)), np.abs(self.x1 - self.x2), np.abs(y1 - y2))
         print(self.x1, self.x2)
 
     def on_click_graph(self, event):
@@ -108,22 +107,20 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
     def on_wheel_graph(self, event):
         if event.button == 'up':
             if self.xlim_end >= len(self.data):
-                print('wheel up pass')
+                pass
             else:
                 self.xlim_start += int(self.fs * self.wheel_sec)
                 self.xlim_end += int(self.fs * self.wheel_sec)
                 self.ax_data.set_xlim([self.xlim_start, self.xlim_end])
-                self.fig.canvas.draw()
-                print('wheel up')
+                self.fig.canvas.draw_idle()
         elif event.button == 'down':
             if self.xlim_start <= 0:
-                print('wheel down pass')
+                pass
             else:
                 self.xlim_start -= int(self.fs * self.wheel_sec)
                 self.xlim_end -= int(self.fs * self.wheel_sec)
                 self.ax_data.set_xlim([self.xlim_start, self.xlim_end])
-                self.fig.canvas.draw()
-                print('wheel down')
+                self.fig.canvas.draw_idle()
         else:
             pass
 
@@ -140,38 +137,46 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         else:
             self.listWidgetLoadFile.addItem(self.load_file_path)
 
-    def btn_clicked_delete_load_file(self):
+    def btn_clicked_delete_event(self):
         # 그래프 이벤트 지우기
         events_num = len(self.events_array)
         if events_num > 0:
             delete_idx = self.EventProperty.currentRow()
-            self.EventProperty.takeItem(delete_idx)
-            ## remove figure
-            self.event_spans[delete_idx].remove()
-            self.event_texts[delete_idx].remove()
-            # remove list
-            self.event_spans.pop(delete_idx)
-            self.event_texts.pop(delete_idx)
+            # 이벤트 데이터 지우기
             self.events_array.pop(delete_idx)
-            # list view 데이터 다시 채우기
-            events_num_after = len(self.events_array)
-            # 여기서 figure str clear 후 다시 그리기
+            # span, text graph, listview clear
+            [tmp_event_spans.remove() for tmp_event_spans in self.event_spans]
+            [tmp_event_texts.remove() for tmp_event_texts in self.event_texts]
             self.EventProperty.clear()
+            self.event_spans.clear()
+            self.event_texts.clear()
+            # span, text graph, listview 넣기
+            events_num_after = len(self.events_array)
             if events_num_after > 0:
                 for tmp_dict_event_idx, tmp_dict_event in enumerate(self.events_array):
                     tmp_event_number = tmp_dict_event_idx
+                    # 각 event dict 로 부터 그래프 그리는 특징 받아오기
                     tmp_event_name = tmp_dict_event['event_name']
-                    duration = tmp_dict_event['duration']
+                    tmp_start_idx = tmp_dict_event['start_idx']
+                    tmp_end_idx = tmp_dict_event['end_idx']
+                    tmp_duration = tmp_dict_event['duration']
+                    tmp_span_y = tmp_dict_event['span_y']
+                    # list view 채우기
                     event_str = 'event number: {}, event name: {}, duration: {} sec'.format(tmp_event_number,
-                                                                                            tmp_event_name, duration)
+                                                                                            tmp_event_name, tmp_duration)
                     self.EventProperty.addItem(event_str)
                     self.events_array[tmp_dict_event_idx]['event_number'] = tmp_dict_event_idx
-            # figure str 다시 그리기
-            ###
-            # figure 다시 그리기
-            self.fig.canvas.draw()
-        else:
-            print('event not exist')
+                    # span 그리기
+                    tmp_span = self.ax_data.axvspan(tmp_start_idx, tmp_end_idx, color='#ccc')
+                    # text 그리기
+                    tmp_text = self.ax_data.text(tmp_start_idx, tmp_span_y, 'event number: {} \n event name: {} \n'.format(tmp_event_number, tmp_event_name) + ' duration: {} sec'.format(tmp_duration), fontsize=10)
+                    # append span and text plot
+                    self.event_spans.append(tmp_span)
+                    self.event_texts.append(tmp_text)
+                # figure 다시 그리기
+                self.fig.canvas.draw()
+            else:
+                print('event not exist')
 
     def add_item_to_list_view(self, event_dict):
         # 새 특징를 리스트 뷰에 추가
@@ -182,7 +187,6 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         self.EventProperty.addItem(event_str)
 
     def double_click_list_view(self):
-        # 그래프 이벤트 지우기
         events_num = len(self.events_array)
         if events_num > 0:
             target_idx = self.EventProperty.currentRow()
@@ -196,8 +200,8 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
             print('event not exist')
 
 if __name__ == '__main__':
-    data = np.random.randn(1000)
+    data = np.random.randn(100000)
     app = QApplication(sys.argv)
-    window = WindowClass(data, fs=10)
+    window = WindowClass(data, fs=4, window_sec=60, wheel_sec=10)
     window.show()
     app.exec_()

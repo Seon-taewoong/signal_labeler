@@ -28,7 +28,7 @@
       <widget class="QListWidget" name="EventProperty"/>
      </item>
      <item row="3" column="0" colspan="2">
-      <widget class="QPushButton" name="pushButtonDeleteLoadFile">
+      <widget class="QPushButton" name="pushButtonDeleteEvent">
        <property name="text">
         <string>Delete</string>
        </property>
