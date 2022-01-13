@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1362</width>
-    <height>350</height>
+    <height>355</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,14 +20,29 @@
       <x>860</x>
       <y>30</y>
       <width>491</width>
-      <height>261</height>
+      <height>281</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="formLayout">
+     <property name="fieldGrowthPolicy">
+      <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+     </property>
+     <property name="rowWrapPolicy">
+      <enum>QFormLayout::DontWrapRows</enum>
+     </property>
+     <property name="horizontalSpacing">
+      <number>7</number>
+     </property>
+     <property name="verticalSpacing">
+      <number>20</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
      <item row="1" column="1">
       <widget class="QListWidget" name="EventProperty"/>
      </item>
-     <item row="3" column="0" colspan="2">
+     <item row="3" column="1">
       <widget class="QPushButton" name="pushButtonDeleteEvent">
        <property name="text">
         <string>Delete</string>
@@ -55,10 +70,30 @@
       <x>20</x>
       <y>30</y>
       <width>831</width>
-      <height>261</height>
+      <height>281</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="LayoutGraph"/>
+    <layout class="QVBoxLayout" name="LayoutGraph" stretch="10,1">
+     <property name="spacing">
+      <number>7</number>
+     </property>
+     <property name="bottomMargin">
+      <number>5</number>
+     </property>
+     <item>
+      <layout class="QVBoxLayout" name="graphLayout"/>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="sliderLayout">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <property name="bottomMargin">
+        <number>6</number>
+       </property>
+      </layout>
+     </item>
+    </layout>
    </widget>
    <widget class="QLabel" name="label_4">
     <property name="geometry">
