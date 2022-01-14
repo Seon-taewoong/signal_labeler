@@ -14,6 +14,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.widgets import RectangleSelector
 # pyqtgraph
 import pyqtgraph as pg
+# custom pakcages
+from libs.modules import signal_slider
+
 
 class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\main_window_pyqtgraph.ui')[0]) :
     def __init__(self, data, fs,
@@ -56,7 +59,7 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
         self.graphLayout.addWidget(self.fig_agg)
         # set slider
         self.sliderLayout.addWidget(self.signal_slider)
-        self.signal_slider.setRange(0, np.ceil((self.data_len / self.fs) / self.wheel_sec))
+        self.signal_slider.setRange(0, int(np.ceil((self.data_len / self.fs) / self.wheel_sec)))
 
         # event connect
         self.fig_agg.scene().sigMouseClicked.connect(self.on_wheel_graph)
@@ -217,48 +220,6 @@ class WindowClass(QMainWindow, uic.loadUiType('G:\github\signal_labeler\gui\\mai
             self.fig.canvas.draw()
         else:
             print('event not exist')
-
-
-class signal_slider(QSlider):
-    def __init__(self, parent, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.parent = parent
-
-    def wheelEvent(self, e):
-        current_pos = self.value()
-        if e.angleDelta().y() > 0:
-
-            if current_pos < self.maximum():
-                current_pos += 1
-                self.setValue(current_pos)
-                self.parent.fig_agg.setXRange(int(current_pos * self.parent.fs * self.parent.wheel_sec),
-                                              int(current_pos * self.parent.fs * self.parent.wheel_sec) + int(
-                                                  self.parent.window_sec * self.parent.fs))
-
-        elif e.angleDelta().y() < 0:
-
-            if current_pos > self.minimum():
-                current_pos -= 1
-                self.setValue(current_pos)
-                self.parent.fig_agg.setXRange(int(current_pos * self.parent.fs * self.parent.wheel_sec),
-                                              int(current_pos * self.parent.fs * self.parent.wheel_sec) + int(
-                                                  self.parent.window_sec * self.parent.fs))
-        else:
-            pass
-
-    def mouseReleaseEvent(self, e):
-        super().mouseReleaseEvent(e)
-        current_pos = self.value()
-        self.parent.fig_agg.setXRange(int(current_pos * self.parent.fs * self.parent.wheel_sec),
-                                      int(current_pos * self.parent.fs * self.parent.wheel_sec) + int(
-                                          self.parent.window_sec * self.parent.fs))
-
-    def mousePressEvent(self, e):
-        super().mousePressEvent(e)
-        current_pos = self.value()
-        self.parent.fig_agg.setXRange(int(current_pos * self.parent.fs * self.parent.wheel_sec),
-                                      int(current_pos * self.parent.fs * self.parent.wheel_sec) + int(
-                                          self.parent.window_sec * self.parent.fs))
 
 
 if __name__ == '__main__':
